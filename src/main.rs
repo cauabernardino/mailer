@@ -1,3 +1,4 @@
+use env_logger::Env;
 use sqlx::PgPool;
 use std::net::TcpListener;
 
@@ -6,6 +7,8 @@ use mailer::startup::run;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
     let config = get_configuration().expect("Failed to read config file");
     let pool_conn = PgPool::connect(&config.database.connection_string())
         .await
