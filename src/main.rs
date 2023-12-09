@@ -1,25 +1,14 @@
 use sqlx::PgPool;
 use std::net::TcpListener;
-use tracing::subscriber::set_global_default;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
 use mailer::configuration::get_configuration;
 use mailer::startup::run;
+use mailer::telemetry::{get_subscriber, init_subscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    LogTracer::init().expect("Failed to set logger");
-
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("mailer".into(), std::io::stdout);
-
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer);
-    set_global_default(subscriber).expect("Failed to set tracing subscriber");
+    let subscriber = get_subscriber("mailer".into(), "info".into(), std::io::stdout);
+    init_subscriber(subscriber);
 
     let config = get_configuration().expect("Failed to read config file");
     let pool_conn = PgPool::connect(&config.database.connection_string())
@@ -29,5 +18,6 @@ async fn main() -> Result<(), std::io::Error> {
     let address = format!("127.0.0.1:{}", config.app_port);
     let listener = TcpListener::bind(address)?;
 
-    run(listener, pool_conn)?.await
+    run(listener, pool_conn)?.await?;
+    Ok(())
 }
