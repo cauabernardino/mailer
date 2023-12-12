@@ -53,6 +53,9 @@ jobs:
       - name: Migrate databae
         run: SKIP_DOCKER=true ./scripts/init_db.sh
 
+      - name: Check sqlx metadata is up-to-date
+        run: cargo sqlx prepare --workspace --check
+
       - name: Run tests
         run: cargo test
 
