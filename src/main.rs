@@ -1,5 +1,4 @@
-use secrecy::ExposeSecret;
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
 use mailer::configuration::get_configuration;
@@ -12,8 +11,7 @@ async fn main() -> Result<(), std::io::Error> {
     init_subscriber(subscriber);
 
     let config = get_configuration().expect("Failed to read config file");
-    let pool_conn = PgPool::connect_lazy(config.database.connection_string().expose_secret())
-        .expect("Failed to connect to Postgres");
+    let pool_conn = PgPoolOptions::new().connect_lazy_with(config.database.with_db());
 
     let address = format!("{}:{}", config.app.host, config.app.port);
     let listener = TcpListener::bind(address)?;

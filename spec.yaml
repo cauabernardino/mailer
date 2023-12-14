@@ -1,0 +1,39 @@
+name: mailer
+region: fra1
+services:
+  - name: mailer
+    dockerfile_path: Dockerfile
+    source_dir: .
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: cauabernardino/mailer
+    health_check:
+      http_path: /health_check
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    envs:
+      - key: APP_DATABASE__USERNAME
+        scope: RUN_TIME
+        value: ${mailerdb.USERNAME}
+      - key: APP_DATABASE__PASSWORD
+        scope: RUN_TIME
+        value: ${mailerdb.PASSWORD}
+      - key: APP_DATABASE__HOST
+        scope: RUN_TIME
+        value: ${mailerdb.HOSTNAME}
+      - key: APP_DATABASE__PORT
+        scope: RUN_TIME
+        value: ${mailerdb.PORT}
+      - key: APP_DATABASE__DB_NAME
+        scope: RUN_TIME
+        value: ${mailerdb.DATABASE}
+databases:
+  - name: mailerdb
+    engine: PG
+    num_nodes: 1
+    size: db-s-dev-database
+    version: "12"
