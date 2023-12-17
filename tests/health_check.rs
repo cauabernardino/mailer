@@ -4,6 +4,7 @@ use std::net::TcpListener;
 use uuid::Uuid;
 
 use mailer::configuration::{get_configuration, DatabaseSettings};
+use mailer::email_client::EmailClient;
 use mailer::startup::run;
 use mailer::telemetry::{get_subscriber, init_subscriber};
 
@@ -60,7 +61,13 @@ async fn spawn_app() -> TestApp {
 
     let db_pool = configure_test_db(&config.database).await;
 
-    let server = run(listener, db_pool.clone()).expect("Failed to bind the address");
+    let sender_email = config
+        .email_client
+        .sender()
+        .expect("Invalid sender email address");
+    let email_client = EmailClient::new(config.email_client.base_url, sender_email);
+
+    let server = run(listener, db_pool.clone(), email_client).expect("Failed to bind the address");
 
     tokio::spawn(server);
 

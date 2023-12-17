@@ -7,3 +7,7 @@ port = 5432
 username = "postgres"
 password = "password"
 db_name = "mailer"
+
+[email_client]
+base_url = "localhost"
+sender_email = "test@gmail.com"
