@@ -11,8 +11,7 @@ impl SubscriberName {
 
         let is_too_long = s.graphemes(true).count() > 256;
 
-        let forbidden_chars = FORBIDDEN_CHARS;
-        let contains_forbidden_chars = s.chars().any(|g| forbidden_chars.contains(&g));
+        let contains_forbidden_chars = s.chars().any(|g| FORBIDDEN_CHARS.contains(&g));
 
         if is_empty_or_whitespace || is_too_long || contains_forbidden_chars {
             Err(format!("{} is not a valid subscriber name", s))
