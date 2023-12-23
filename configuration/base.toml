@@ -12,3 +12,4 @@ db_name = "mailer"
 base_url = "localhost"
 sender_email = "test@gmail.com"
 auth_token = "my-secret-token"
+timeout_milliseconds = 10000
