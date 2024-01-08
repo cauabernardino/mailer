@@ -1,11 +1,9 @@
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::net::TcpListener;
 use uuid::Uuid;
 
 use mailer::configuration::{get_configuration, DatabaseSettings};
-use mailer::email_client::EmailClient;
-use mailer::startup::run;
+use mailer::startup::{get_connection_pool, Application};
 use mailer::telemetry::{get_subscriber, init_subscriber};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -52,31 +50,25 @@ pub struct TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
-    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to a random port");
-    let port = listener.local_addr().unwrap().port();
-    let address = format!("http://127.0.0.1:{}", port);
+    let config = {
+        let mut c = get_configuration().expect("Failed to read config.");
+        c.database.db_name = Uuid::new_v4().to_string();
+        c.app.port = 0;
+        c
+    };
 
-    let mut config = get_configuration().expect("Failed to read config.");
-    config.database.db_name = Uuid::new_v4().to_string();
+    configure_test_db(&config.database).await;
 
-    let db_pool = configure_test_db(&config.database).await;
+    let application = Application::build(config.clone())
+        .await
+        .expect("Failed to build application");
 
-    let sender_email = config
-        .email_client
-        .sender()
-        .expect("Invalid sender email address");
+    let address = format!("http://127.0.0.1:{}", application.port());
 
-    let timeout = config.email_client.timeout();
-    let email_client = EmailClient::new(
-        config.email_client.base_url,
-        sender_email,
-        config.email_client.auth_token,
-        timeout,
-    );
+    tokio::spawn(application.run_until_stopped());
 
-    let server = run(listener, db_pool.clone(), email_client).expect("Failed to bind the address");
-
-    tokio::spawn(server);
-
-    TestApp { address, db_pool }
+    TestApp {
+        address,
+        db_pool: get_connection_pool(&config.database),
+    }
 }
