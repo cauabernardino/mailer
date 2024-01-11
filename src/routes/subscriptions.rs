@@ -1,7 +1,6 @@
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
-use unicode_segmentation::UnicodeSegmentation;
 use uuid::Uuid;
 
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
@@ -108,17 +107,4 @@ pub async fn insert_subscriber(
         e
     })?;
     Ok(())
-}
-
-/// Returns `true` if the input satisfies the validation constraints on acceptable subscriber
-/// names, returns `false` otherwise.
-pub fn is_valid_name(s: &str) -> bool {
-    let is_empty_or_whitespace = s.trim().is_empty();
-
-    let is_too_long = s.graphemes(true).count() > 256;
-
-    let forbidden_chars = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
-    let contains_forbidden_chars = s.chars().any(|g| forbidden_chars.contains(&g));
-
-    !(is_empty_or_whitespace || is_too_long || contains_forbidden_chars)
 }
