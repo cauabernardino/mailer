@@ -16,7 +16,7 @@ actix-web = "4"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 serde-aux = "4"
-config = "0.13"
+config = "0.14"
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4.31", default-features = false, features = ["clock"] }
 tracing = { version = "0.1", features = ["log"] }
