@@ -1,11 +1,19 @@
-use validator::validate_email;
+use validator::ValidateEmail;
+
+struct EmailValidator(String);
+
+impl ValidateEmail for EmailValidator {
+    fn as_email_string(&self) -> Option<std::borrow::Cow<str>> {
+        Some(std::borrow::Cow::Borrowed(&self.0))
+    }
+}
 
 #[derive(Debug)]
 pub struct SubscriberEmail(String);
 
 impl SubscriberEmail {
     pub fn parse(s: String) -> Result<SubscriberEmail, String> {
-        if validate_email(&s) {
+        if EmailValidator(s.clone()).validate_email() {
             Ok(Self(s))
         } else {
             Err(format!("{} is not a valid subscriber email.", s))
